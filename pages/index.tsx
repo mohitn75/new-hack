@@ -257,15 +257,22 @@ const Dashboard = () => {
         <Button className="input-text-btn" label="Analyze Text" onClick={handleSubmit} />
         </div>
       </div>
-      <div className="col-12 lg:col-6 xl:col-4">
+
+      {/* <div className="col-12 lg:col-6 xl:col-4">
         <div className="card mb-0">
           <Knob
             className="text-center"
-            value={overallValue}
+            value={100-(Math.round(result2["POSITIVE"] * 100 * 100) / 100).toFixed(
+              2
+            )}
             onChange={(e) => setValue(e.value)}
             size={200}
-            valueColor="#FF0000"
-            rangeColor="#00FF00"
+            valueColor={(100-(Math.round(result2["POSITIVE"] * 100 * 100) / 100).toFixed(
+              2
+            ))>=50?"#FF0000":"00FF00"}
+            rangeColor={(100-(Math.round(result2["POSITIVE"] * 100 * 100) / 100).toFixed(
+              2
+            ))>=50?"#FF0000":"00FF00"}
           />
           <br />
           <br />
@@ -293,14 +300,14 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-      
+       */}
 
       
       <div className="col-12 lg:col-6 xl:col-6">
         <div className="card mb-0">
           <Knob
             className="text-center"
-            value={overallValue}
+            value={94}
             onChange={(e) => setValue(e.value)}
             size={200}
             valueColor="#FF0000"
@@ -338,9 +345,7 @@ const Dashboard = () => {
         <div className="card card-name">
           <div className="progress-bar-label-left">Low Monetary Risk</div>
           <ProgressBar
-            value={100-(Math.round(result1["POSITIVE"] * 100 * 100) / 100).toFixed(
-              2
-            )}
+            value={50}
             template={labelTemplate}
           ></ProgressBar>
           <div className="risk-label-right progress-bar-label-right ">High Monetary Risk</div>
@@ -350,7 +355,7 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="card card-name">
-          <div className="progress-bar-label-left">Low Risk </div>
+          <div className="progress-bar-label-left">Low Risk</div>
           <ProgressBar 
             className="risk-analyser"
             value={100-(Math.round(result2["POSITIVE"] * 100 * 100) / 100).toFixed(
@@ -358,7 +363,7 @@ const Dashboard = () => {
             )}
             template={labelTemplate}
           ></ProgressBar>
-          <div className="risk-label-right progress-bar-label-right ">High  Risk</div>
+          <div className="risk-label-right progress-bar-label-right ">High Monetary Risk</div>
           <br />
           <br />
           <div className="text-900 font-medium text-xl text-center  ">

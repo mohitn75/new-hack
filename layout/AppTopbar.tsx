@@ -24,6 +24,7 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
                 <img src={`/layout/images/logo-${layoutConfig.colorScheme !== 'light' ? 'white' : 'dark'}.svg`} width="47.22px" height={'35px'} alt="logo" />
                 <span>dbAURiS</span>
             </Link>
+            <h2>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Audio Based Universal Risk Sentimental Analyis</h2>
 
             
 
