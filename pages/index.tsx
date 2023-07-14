@@ -13,7 +13,10 @@ import { Demo } from "../types/types";
 import { ChartData, ChartOptions } from "chart.js";
 import { FileUpload } from "primereact/fileupload";
 import axios from "axios";
+import { ProgressBar } from "primereact/progressbar";
 import { Knob } from "primereact/knob";
+import { InputText } from 'primereact/inputtext';
+
 
 const lineData: ChartData = {
   labels: ["January", "February", "March", "April", "May", "June", "July"],
@@ -49,21 +52,26 @@ const buttonStyleGreen = {
 
 const Dashboard = () => {
   const [finbertData, setFinbertData] = useState<any>({});
+  const [inputValue, setInputValue] = useState('');
   const [overallValue, setOverallValue] = useState(50);
   const [products, setProducts] = useState<Demo.Product[]>([]);
   const menu1 = useRef<Menu>(null);
   const menu2 = useRef<Menu>(null);
   const [lineOptions, setLineOptions] = useState<ChartOptions>({});
   const { layoutConfig } = useContext(LayoutContext);
-  const uploadUrl1 = 'https://hackathon-backend-25p3nguxwa-de.a.run.app/finbert?text=hello';
-  const uploadUrl2 = 'https://hackathon-backend-25p3nguxwa-de.a.run.app/finbert?text=hello';
-  const uploadUrl3 = 'https://hackathon-backend-25p3nguxwa-de.a.run.app/finbert?text=hello';
-  const uploadUrl4 = 'https://hackathon-backend-25p3nguxwa-de.a.run.app/finbert?text=hello';
+  const uploadUrl = "https://hackathon-backend-25p3nguxwa-de.a.run.app/upload"; // Update with your Flask API URL
+  const getApiUrls = [
+    "https://hackathon-backend-25p3nguxwa-de.a.run.app/distilbert",
+    "https://hackathon-backend-25p3nguxwa-de.a.run.app/roberta",
+    "https://hackathon-backend-25p3nguxwa-de.a.run.app/finbert",
+    "http://your-api-url4",
+  ]; // Update with your GET API URLs
 
-  const [data1, setData1] = useState(null);
-  const [data2, setData2] = useState(null);
-  const [data3, setData3] = useState(null);
-  const [data4, setData4] = useState(null);
+  const [convertedText, setConvertedText] = useState("HELLO");
+  const [result1, setResult1] = useState("");
+  const [result2, setResult2] = useState("");
+  const [result3, setResult3] = useState("");
+  const [result4, setResult4] = useState("");
   const finBertDatas = {
     "Analyst Update": 0.9603074193000793,
     "Company | Product News": 0.002390812383964658,
@@ -86,7 +94,17 @@ const Dashboard = () => {
     "Stock Movement": 0.009746182709932327,
     "Treasuries | Corporate Debt": 0.0016803651815280318,
   };
+  const labelTemplate = (value) => `${value}%`; // Custom label template function
+  let haha = 'Try'
+  const handleSubmit = (e) => {
+    // Handle the form submission
+    console.log('Submitted value:', inputValue);
+    // Add your logic here to process the submitted value
 
+    // Clear the input field
+    haha = inputValue
+    getApis();
+  };
   const applyLightTheme = () => {
     const lineOptions: ChartOptions = {
       plugins: {
@@ -154,8 +172,8 @@ const Dashboard = () => {
   useEffect(() => {
     // Use the effect to trigger re-render when data1 changes
     // You can include other state variables in the dependency array if needed
-    console.log('Data 1 Updated:', data1);
-  }, [data1]);
+    console.log(result1, result2, result3);
+  }, [result1, result2, result3]);
 
   const formatCurrency = (value: number) => {
     return value?.toLocaleString("en-US", {
@@ -164,27 +182,35 @@ const Dashboard = () => {
     });
   };
 
-
+  const getApis = () => {
+    axios.get(getApiUrls[0] + "?text=" + haha).then((response) => {
+      setResult1(response.data);
+    });
+    axios.get(getApiUrls[1] + "?text=" + haha).then((response) => {
+      const sortedObj = Object.fromEntries(
+        Object.entries(response.data).sort(([, a], [, b]) => b - a)
+      );
+      setResult2(sortedObj);
+    });
+    axios.get(getApiUrls[2] + "?text=" + haha).then((response) => {
+      const sortedObj = Object.fromEntries(
+        Object.entries(response.data).sort(([, a], [, b]) => b - a)
+      );
+      setResult3(sortedObj);
+    });
+  };
 
   const handleFileUpload = (event) => {
     const formData = new FormData();
-    formData.append('file', event.files[0]);
-
-    const requests = [
-      axios.get(uploadUrl1, formData),
-      axios.get(uploadUrl2, formData),
-      axios.get(uploadUrl3, formData),
-      axios.get(uploadUrl4, formData),
-    ];
+    formData.append("file", event.files[0]);
 
     axios
-      .all(requests)
-      .then((responses) => {
-        console.log(responses )
-        setData1(responses[0].data);
-        setData2(responses[1].data);
-        setData3(responses[2].data);
-        setData4(responses[3].data);
+      .post(uploadUrl, formData)
+      .then((response) => {
+        const convertedText = response.data; // Assuming the response contains the converted text
+        setConvertedText(convertedText);
+
+        // Call GET APIs
       })
       .catch((error) => {
         console.error(error);
@@ -204,24 +230,31 @@ const Dashboard = () => {
             </div>
           </div>
           <FileUpload
-            name="demo[]"
-            customUpload
-            multiple
+            name="file"
+            url={uploadUrl}
+            mode="advanced"
             accept="audio/*"
+            customUpload
+            chooseLabel="Select File"
+            uploadLabel="Upload"
+            cancelLabel="Cancel"
             uploadHandler={handleFileUpload}
-            maxFileSize={1000000000}
-            emptyTemplate={
-              <p className="m-0">Drag and drop files to here to upload.</p>
-            }
           />
-          <div className="search-button-padding">
-            {/* <Button
+          {/* <div className="search-button-padding">
+            <Button
               className="search-button"
-              label="Submit"
+              label="Analyze"
               icon="pi pi-check"
-              onClick={FileUploader}
-            /> */}
-          </div>
+              onClick={getApis}
+            />
+          </div> */}
+          <br />
+          <InputText
+          className="input-text-search"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+        />
+        <Button className="input-text-btn" label="Analyze Text" onClick={handleSubmit} />
         </div>
       </div>
       <div className="col-12 lg:col-6 xl:col-4">
@@ -260,11 +293,84 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      
+
+      
+      <div className="col-12 lg:col-6 xl:col-6">
+        <div className="card mb-0">
+          <Knob
+            className="text-center"
+            value={overallValue}
+            onChange={(e) => setValue(e.value)}
+            size={200}
+            valueColor="#FF0000"
+            rangeColor="#00FF00"
+          />
+          <br />
+          <br />
+          <div className="container">
+            <div className="row">
+              <div className="col-sm">
+                <div className="text-900 font-medium text-xl text-center  ">
+                  RISK ASSESSMENT
+                </div>
+              </div>
+              <div className="col-sm">
+                <br />
+                <div className="text-center">
+                  <Button
+                    label={overallValue >= 50 ? "HIGH RISK" : "LOW RISK"}
+                    className="p-button-outlined"
+                    disabled
+                    style={
+                      overallValue >= 50 ? buttonStyleRed : buttonStyleGreen
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
 
       <div className="col-12 xl:col-6">
-        <div className="card"></div>
+        <div className="card card-name">
+          <div className="progress-bar-label-left">Low Monetary Risk</div>
+          <ProgressBar
+            value={100-(Math.round(result1["POSITIVE"] * 100 * 100) / 100).toFixed(
+              2
+            )}
+            template={labelTemplate}
+          ></ProgressBar>
+          <div className="risk-label-right progress-bar-label-right ">High Monetary Risk</div>
+          <br /><br />
+          <div className="text-900 font-medium text-xl text-center  ">
+            FINANCIAL SENTIMENT ANALYSIS
+          </div>
+        </div>
+        <div className="card card-name">
+          <div className="progress-bar-label-left">Low Risk </div>
+          <ProgressBar 
+            className="risk-analyser"
+            value={100-(Math.round(result2["POSITIVE"] * 100 * 100) / 100).toFixed(
+              2
+            )}
+            template={labelTemplate}
+          ></ProgressBar>
+          <div className="risk-label-right progress-bar-label-right ">High  Risk</div>
+          <br />
+          <br />
+          <div className="text-900 font-medium text-xl text-center  ">
+            RISK THREAT ANALYSER
+          </div>
+        </div>
+
+        
+      </div>
+      <div className="col-12 xl:col-12">
         <div className="card category-card">
-          <div className="flex justify-content-between align-items-center mb-5">
+        <div className="text-900 font-medium text-xl text-center  ">
             <h5>Financial Impact/Domain</h5>
           </div>
           <ul className="list-none p-0 m-0">
@@ -287,111 +393,31 @@ const Dashboard = () => {
               </div>
               </div>
             ))} */}
-            {data1 && Object.entries(data1).map(([key, value]) => (
-              <li className="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                <div>
-                  <span className="text-900 font-medium mr-2 mb-1 md:mb-0">
-                    {key}
-                  </span>
-                </div>
-                <div className="mt-2 md:mt-0 flex align-items-center">
-                  <div
-                    className="surface-300 border-round overflow-hidden w-10rem lg:w-6rem"
-                    style={{ height: "8px" }}
-                  >
-                    <div
-                      className="bg-orange-500 h-full"
-                      style={{ width: value * 100 }}
-                    />
+
+            {result3 &&
+              Object.entries(result3).map(([key, value]) => (
+                <li className="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                  <div>
+                    <span className="text-900 font-medium mr-2 mb-1 md:mb-0">
+                      {key}
+                    </span>
                   </div>
-                  <span className="text-orange-500 ml-3 font-medium">
-                    {(Math.round(value * 100 * 100) / 100).toFixed(2)}%
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      <div className="col-12 xl:col-6">
-        <div className="card"></div>
-
-        <div className="card">
-          <div className="flex align-items-center justify-content-between mb-4">
-            <h5>Notifications</h5>
-            <div>
-              <Button
-                type="button"
-                icon="pi pi-ellipsis-v"
-                className="p-button-rounded p-button-text p-button-plain"
-                onClick={(event) => menu2.current?.toggle(event)}
-              />
-              <Menu
-                ref={menu2}
-                popup
-                model={[
-                  { label: "Add New", icon: "pi pi-fw pi-plus" },
-                  { label: "Remove", icon: "pi pi-fw pi-minus" },
-                ]}
-              />
-            </div>
-          </div>
-
-          <span className="block text-600 font-medium mb-3">TODAY</span>
-          <ul className="p-0 mx-0 mt-0 mb-4 list-none">
-            <li className="flex align-items-center py-2 border-bottom-1 surface-border">
-              <div className="w-3rem h-3rem flex align-items-center justify-content-center bg-blue-100 border-circle mr-3 flex-shrink-0">
-                <i className="pi pi-dollar text-xl text-blue-500" />
-              </div>
-              <span className="text-900 line-height-3">
-                Richard Jones
-                <span className="text-700">
-                  {" "}
-                  has purchased a blue t-shirt for{" "}
-                  <span className="text-blue-500">79$</span>
-                </span>
-              </span>
-            </li>
-            <li className="flex align-items-center py-2">
-              <div className="w-3rem h-3rem flex align-items-center justify-content-center bg-orange-100 border-circle mr-3 flex-shrink-0">
-                <i className="pi pi-download text-xl text-orange-500" />
-              </div>
-              <span className="text-700 line-height-3">
-                Your request for withdrawal of{" "}
-                <span className="text-blue-500 font-medium">2500$</span> has
-                been initiated.
-              </span>
-            </li>
-          </ul>
-
-          <span className="block text-600 font-medium mb-3">YESTERDAY</span>
-          <ul className="p-0 m-0 list-none">
-            <li className="flex align-items-center py-2 border-bottom-1 surface-border">
-              <div className="w-3rem h-3rem flex align-items-center justify-content-center bg-blue-100 border-circle mr-3 flex-shrink-0">
-                <i className="pi pi-dollar text-xl text-blue-500" />
-              </div>
-              <span className="text-900 line-height-3">
-                Keyser Wick
-                <span className="text-700">
-                  {" "}
-                  has purchased a black jacket for{" "}
-                  <span className="text-blue-500">59$</span>
-                </span>
-              </span>
-            </li>
-            <li className="flex align-items-center py-2 border-bottom-1 surface-border">
-              <div className="w-3rem h-3rem flex align-items-center justify-content-center bg-pink-100 border-circle mr-3 flex-shrink-0">
-                <i className="pi pi-question text-xl text-pink-500" />
-              </div>
-              <span className="text-900 line-height-3">
-                Jane Davis
-                <span className="text-700">
-                  {" "}
-                  has posted a new questions about your product.
-                </span>
-              </span>
-            </li>
+                  <div className="mt-2 md:mt-0 flex align-items-center">
+                    <div
+                      className="surface-300 border-round overflow-hidden w-10rem lg:w-6rem"
+                      style={{ height: "8px" }}
+                    >
+                      <div
+                        className="bg-orange-500 h-full"
+                        style={{ width: value * 100 }}
+                      />
+                    </div>
+                    <span className="text-orange-500 ml-3 font-medium">
+                      {(Math.round(value * 100 * 100) / 100).toFixed(2)}%
+                    </span>
+                  </div>
+                </li>
+              ))}
           </ul>
         </div>
       </div>
