@@ -8,11 +8,12 @@ import { Menu } from "primereact/menu";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { ProductService } from "../demo/service/ProductService";
 import { LayoutContext } from "../layout/context/layoutcontext";
-import SeverityBar from "./SeverityBar";
 import Link from "next/link";
 import { Demo } from "../types/types";
 import { ChartData, ChartOptions } from "chart.js";
 import { FileUpload } from "primereact/fileupload";
+import axios from "axios";
+import { Knob } from "primereact/knob";
 
 const lineData: ChartData = {
   labels: ["January", "February", "March", "April", "May", "June", "July"],
@@ -35,19 +36,35 @@ const lineData: ChartData = {
     },
   ],
 };
-const buttonStyle = {
+const buttonStyleRed = {
   borderColor: "#FF0000",
   color: "#FF0000",
   cursor: "not-allowed",
 };
+const buttonStyleGreen = {
+  borderColor: "#00FF00",
+  color: "#00FF00",
+  cursor: "not-allowed",
+};
+
 const Dashboard = () => {
+  const [finbertData, setFinbertData] = useState<any>({});
+  const [overallValue, setOverallValue] = useState(50);
   const [products, setProducts] = useState<Demo.Product[]>([]);
   const menu1 = useRef<Menu>(null);
   const menu2 = useRef<Menu>(null);
   const [lineOptions, setLineOptions] = useState<ChartOptions>({});
   const { layoutConfig } = useContext(LayoutContext);
+  const uploadUrl1 = 'https://hackathon-backend-25p3nguxwa-de.a.run.app/finbert?text=hello';
+  const uploadUrl2 = 'https://hackathon-backend-25p3nguxwa-de.a.run.app/finbert?text=hello';
+  const uploadUrl3 = 'https://hackathon-backend-25p3nguxwa-de.a.run.app/finbert?text=hello';
+  const uploadUrl4 = 'https://hackathon-backend-25p3nguxwa-de.a.run.app/finbert?text=hello';
 
-  const finBertData = {
+  const [data1, setData1] = useState(null);
+  const [data2, setData2] = useState(null);
+  const [data3, setData3] = useState(null);
+  const [data4, setData4] = useState(null);
+  const finBertDatas = {
     "Analyst Update": 0.9603074193000793,
     "Company | Product News": 0.002390812383964658,
     Currencies: 0.0008924901485443115,
@@ -135,16 +152,10 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    ProductService.getProductsSmall().then((data) => setProducts(data));
-  }, []);
-
-  useEffect(() => {
-    if (layoutConfig.colorScheme === "light") {
-      applyLightTheme();
-    } else {
-      applyDarkTheme();
-    }
-  }, [layoutConfig.colorScheme]);
+    // Use the effect to trigger re-render when data1 changes
+    // You can include other state variables in the dependency array if needed
+    console.log('Data 1 Updated:', data1);
+  }, [data1]);
 
   const formatCurrency = (value: number) => {
     return value?.toLocaleString("en-US", {
@@ -153,10 +164,37 @@ const Dashboard = () => {
     });
   };
 
+
+
+  const handleFileUpload = (event) => {
+    const formData = new FormData();
+    formData.append('file', event.files[0]);
+
+    const requests = [
+      axios.get(uploadUrl1, formData),
+      axios.get(uploadUrl2, formData),
+      axios.get(uploadUrl3, formData),
+      axios.get(uploadUrl4, formData),
+    ];
+
+    axios
+      .all(requests)
+      .then((responses) => {
+        console.log(responses )
+        setData1(responses[0].data);
+        setData2(responses[1].data);
+        setData3(responses[2].data);
+        setData4(responses[3].data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
   return (
     <div className="grid">
       <div className="col-12 lg:col-6 xl:col-8">
-        <div className="card mb-0">
+        <div className="card mb-0 upload-box">
           <div className="flex justify-content-between mb-3">
             <div>
               <span className="block text-500 font-medium mb-3">
@@ -167,43 +205,56 @@ const Dashboard = () => {
           </div>
           <FileUpload
             name="demo[]"
-            url={"/api/upload"}
+            customUpload
             multiple
             accept="audio/*"
+            uploadHandler={handleFileUpload}
             maxFileSize={1000000000}
             emptyTemplate={
               <p className="m-0">Drag and drop files to here to upload.</p>
             }
           />
           <div className="search-button-padding">
-            <Button
+            {/* <Button
               className="search-button"
               label="Submit"
               icon="pi pi-check"
-            />
+              onClick={FileUploader}
+            /> */}
           </div>
         </div>
       </div>
       <div className="col-12 lg:col-6 xl:col-4">
         <div className="card mb-0">
-          <SeverityBar value={60} />
+          <Knob
+            className="text-center"
+            value={overallValue}
+            onChange={(e) => setValue(e.value)}
+            size={200}
+            valueColor="#FF0000"
+            rangeColor="#00FF00"
+          />
           <br />
           <br />
           <div className="container">
             <div className="row">
               <div className="col-sm">
-                <div className="text-900 font-medium text-xl">
+                <div className="text-900 font-medium text-xl text-center  ">
                   RISK ASSESSMENT
                 </div>
               </div>
               <div className="col-sm">
                 <br />
-                <Button
-                  label="HIGH RISK"
-                  className="p-button-outlined"
-                  disabled
-                  style={buttonStyle}
-                />
+                <div className="text-center">
+                  <Button
+                    label={overallValue >= 50 ? "HIGH RISK" : "LOW RISK"}
+                    className="p-button-outlined"
+                    disabled
+                    style={
+                      overallValue >= 50 ? buttonStyleRed : buttonStyleGreen
+                    }
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -212,30 +263,11 @@ const Dashboard = () => {
 
       <div className="col-12 xl:col-6">
         <div className="card"></div>
-        <div className="card">
+        <div className="card category-card">
           <div className="flex justify-content-between align-items-center mb-5">
             <h5>Financial Impact/Domain</h5>
           </div>
           <ul className="list-none p-0 m-0">
-            <li className="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-              <div>
-                <span className="text-900 font-medium mr-2 mb-1 md:mb-0">
-                  Space T-Shirt
-                </span>
-              </div>
-              <div className="mt-2 md:mt-0 flex align-items-center">
-                <div
-                  className="surface-300 border-round overflow-hidden w-10rem lg:w-6rem"
-                  style={{ height: "8px" }}
-                >
-                  <div
-                    className="bg-orange-500 h-full"
-                    style={{ width: "50%" }}
-                  />
-                </div>
-                <span className="text-orange-500 ml-3 font-medium">%50</span>
-              </div>
-            </li>
             {/* {Object.entries(finBertData).map(([key, value]) => (
               <div key={key}>
                 <span className="text-900 font-medium mr-2 mb-1 md:mb-0">
@@ -255,6 +287,29 @@ const Dashboard = () => {
               </div>
               </div>
             ))} */}
+            {data1 && Object.entries(data1).map(([key, value]) => (
+              <li className="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                <div>
+                  <span className="text-900 font-medium mr-2 mb-1 md:mb-0">
+                    {key}
+                  </span>
+                </div>
+                <div className="mt-2 md:mt-0 flex align-items-center">
+                  <div
+                    className="surface-300 border-round overflow-hidden w-10rem lg:w-6rem"
+                    style={{ height: "8px" }}
+                  >
+                    <div
+                      className="bg-orange-500 h-full"
+                      style={{ width: value * 100 }}
+                    />
+                  </div>
+                  <span className="text-orange-500 ml-3 font-medium">
+                    {(Math.round(value * 100 * 100) / 100).toFixed(2)}%
+                  </span>
+                </div>
+              </li>
+            ))}
           </ul>
         </div>
       </div>

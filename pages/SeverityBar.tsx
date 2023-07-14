@@ -1,5 +1,6 @@
 import React from 'react';
 import { ProgressBar } from 'primereact/progressbar';
+import { Knob } from 'primereact/knob';
 
 
 interface SeverityBarProps {
@@ -23,28 +24,15 @@ const SeverityBar: React.FC<SeverityBarProps> = ({ value }) => {
 
   };
 
-  const pointerStyle = {
-    position: 'absolute',
-    top: '-10px',
-    left: `calc(${value}% - 5px)`,
-    width: '0',
-    height: '0',
-    borderTop: '10px solid black',
-    borderLeft: '5px solid transparent',
-    borderRight: '5px solid transparent',
-    transform: 'translateX(-50%)',
+  const knobSize = 300;
+  const knobStyle = {
+    width: `${knobSize}px`,
+    height: `${knobSize}px`,
+    fontSize: `${knobSize / 4}px`,
   };
 
   return (
-    <div style={progressBarStyle}>
-      <ProgressBar
-        value={value}
-        style={{ height: '100%', borderRadius: 0 }}
-        showValue={false}
-        className="severity-bar"
-      />
-      <div style={pointerStyle} />
-    </div>
+      <Knob value={value} style={knobStyle} onChange={(e) => setValue(e.value)} />
   );
 };
 
