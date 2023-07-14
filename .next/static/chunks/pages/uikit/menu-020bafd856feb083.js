@@ -1,1 +1,0 @@
-(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[8405],{1801:function(n,u,_){(window.__NEXT_P=window.__NEXT_P||[]).push(["/uikit/menu",function(){return _(5676)}])}},function(n){n.O(0,[3849,3462,9774,2888,179],function(){return n(n.s=1801)}),_N_E=n.O()}]);
